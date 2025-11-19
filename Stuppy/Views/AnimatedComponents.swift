@@ -119,7 +119,21 @@ struct AnimatedSubscriptionRow: View {
                         .cornerRadius(4)
                     }
 
-                    if subscription.isOverdue {
+                    if subscription.isPaidForCurrentMonth {
+                        HStack(spacing: 2) {
+                            Image(systemName: "checkmark.circle.fill")
+                                .font(.system(size: 10))
+                            Text("Paid")
+                                .font(.system(size: 10, weight: .medium))
+                                .lineLimit(1)
+                                .fixedSize(horizontal: true, vertical: false)
+                        }
+                        .foregroundColor(.accentGreen)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(Color.accentGreen.opacity(0.1))
+                        .cornerRadius(4)
+                    } else if subscription.isOverdue {
                         HStack(spacing: 2) {
                             Image(systemName: "exclamationmark.triangle.fill")
                                 .font(.system(size: 10))

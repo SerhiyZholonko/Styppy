@@ -12,6 +12,7 @@ class SubscriptionManager: ObservableObject {
         migrateExistingData()
         addSampleData()
         processAutoRenewals()
+        processPaymentStatusReset()
     }
 
     func addSubscription(_ subscription: Subscription) {
@@ -34,6 +35,24 @@ class SubscriptionManager: ObservableObject {
     func toggleSubscriptionStatus(_ subscription: Subscription) {
         if let index = subscriptions.firstIndex(where: { $0.id == subscription.id }) {
             subscriptions[index].isActive.toggle()
+            saveSubscriptions()
+        }
+    }
+    
+    func markSubscriptionAsPaid(_ subscription: Subscription) {
+        if let index = subscriptions.firstIndex(where: { $0.id == subscription.id }) {
+            subscriptions[index].markAsPaid()
+            saveSubscriptions()
+        }
+    }
+    
+    func togglePaymentStatus(_ subscription: Subscription) {
+        if let index = subscriptions.firstIndex(where: { $0.id == subscription.id }) {
+            if subscriptions[index].isPaidForCurrentMonth {
+                subscriptions[index].resetPaymentStatus()
+            } else {
+                subscriptions[index].markAsPaid()
+            }
             saveSubscriptions()
         }
     }
@@ -60,6 +79,16 @@ class SubscriptionManager: ObservableObject {
     var totalCurrentMonthSpending: Double {
         activeSubscriptions.reduce(0) { $0 + $1.currentMonthPrice }
     }
+    
+    // Total unpaid amount for current month
+    var totalUnpaidCurrentMonthSpending: Double {
+        activeSubscriptions.reduce(0) { $0 + $1.unpaidCurrentMonthPrice }
+    }
+    
+    // Total unpaid monthly spending (normalized to monthly)
+    var totalUnpaidMonthlySpending: Double {
+        activeSubscriptions.reduce(0) { $0 + $1.unpaidMonthlyPrice }
+    }
 
     var totalYearlySpending: Double {
         activeSubscriptions.reduce(0) { $0 + $1.yearlyPrice }
@@ -75,6 +104,14 @@ class SubscriptionManager: ObservableObject {
     
     func currentMonthSpending(for category: SubscriptionCategory) -> Double {
         subscriptions(for: category).reduce(0) { $0 + $1.currentMonthPrice }
+    }
+    
+    func unpaidMonthlySpending(for category: SubscriptionCategory) -> Double {
+        subscriptions(for: category).reduce(0) { $0 + $1.unpaidMonthlyPrice }
+    }
+    
+    func unpaidCurrentMonthSpending(for category: SubscriptionCategory) -> Double {
+        subscriptions(for: category).reduce(0) { $0 + $1.unpaidCurrentMonthPrice }
     }
     
     func clearAllSubscriptions() {
@@ -109,6 +146,21 @@ class SubscriptionManager: ObservableObject {
     var autoRenewingSubscriptions: [Subscription] {
         activeSubscriptions.filter { $0.repetitionType != .disabled }
     }
+    
+    func processPaymentStatusReset() {
+        var hasChanges = false
+        
+        for i in subscriptions.indices {
+            if subscriptions[i].needsPaymentReset {
+                subscriptions[i].resetPaymentStatus()
+                hasChanges = true
+            }
+        }
+        
+        if hasChanges {
+            saveSubscriptions()
+        }
+    }
 
     private func saveSubscriptions() {
         do {
@@ -139,7 +191,8 @@ class SubscriptionManager: ObservableObject {
                 category: .streaming,
                 nextBillingDate: Calendar.current.date(byAdding: .day, value: 5, to: Date()) ?? Date(),
                 color: "red",
-                repetitionType: .monthly
+                repetitionType: .monthly,
+                isPaidForCurrentMonth: false
             ),
             Subscription(
                 name: "Spotify",
@@ -148,7 +201,8 @@ class SubscriptionManager: ObservableObject {
                 category: .music,
                 nextBillingDate: Calendar.current.date(byAdding: .day, value: 12, to: Date()) ?? Date(),
                 color: "green",
-                repetitionType: .monthly
+                repetitionType: .monthly,
+                isPaidForCurrentMonth: false
             ),
             Subscription(
                 name: "Adobe Creative Cloud",
@@ -157,7 +211,8 @@ class SubscriptionManager: ObservableObject {
                 category: .productivity,
                 nextBillingDate: Calendar.current.date(byAdding: .day, value: 3, to: Date()) ?? Date(),
                 color: "purple",
-                repetitionType: .yearly
+                repetitionType: .yearly,
+                isPaidForCurrentMonth: false
             )
         ]
 
@@ -185,7 +240,8 @@ class SubscriptionManager: ObservableObject {
                     isActive: subscription.isActive,
                     notes: subscription.notes,
                     color: subscription.color,
-                    repetitionType: subscription.repetitionType
+                    repetitionType: subscription.repetitionType,
+                    isPaidForCurrentMonth: subscription.isPaidForCurrentMonth
                 )
                 hasChanges = true
             }

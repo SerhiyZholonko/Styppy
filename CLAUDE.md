@@ -10,32 +10,32 @@ This is a native iOS SwiftUI subscription management application built with Xcod
 
 ```bash
 # Build the app
-xcodebuild -project Stuby.xcodeproj -scheme Stuby -destination 'platform=iOS Simulator,name=iPhone 15' build
+xcodebuild -project Stuppy.xcodeproj -scheme Stuppy -destination 'platform=iOS Simulator,name=iPhone 15' build
 
 # Run tests (if tests are added)
-xcodebuild test -project Stuby.xcodeproj -scheme Stuby -destination 'platform=iOS Simulator,name=iPhone 15'
+xcodebuild test -project Stuppy.xcodeproj -scheme Stuppy -destination 'platform=iOS Simulator,name=iPhone 15'
 
 # Clean build
-xcodebuild clean -project Stuby.xcodeproj -scheme Stuby
+xcodebuild clean -project Stuppy.xcodeproj -scheme Stuppy
 
 # List available schemes and targets
-xcodebuild -list -project Stuby.xcodeproj
+xcodebuild -list -project Stuppy.xcodeproj
 
 # Archive for distribution
-xcodebuild archive -project Stuby.xcodeproj -scheme Stuby -archivePath ~/Desktop/Stuby.xcarchive
+xcodebuild archive -project Stuppy.xcodeproj -scheme Stuppy -archivePath ~/Desktop/Stuppy.xcarchive
 
 # Build for device
-xcodebuild -project Stuby.xcodeproj -scheme Stuby -destination 'generic/platform=iOS' build
+xcodebuild -project Stuppy.xcodeproj -scheme Stuppy -destination 'generic/platform=iOS' build
 ```
 
 ## High-Level Architecture
 
 ### Application Purpose
-Stuby is a subscription management app that helps users track recurring subscriptions, monitor spending, and receive notifications for upcoming renewals.
+Stuppy is a subscription management app that helps users track recurring subscriptions, monitor spending, and receive notifications for upcoming renewals.
 
 ### Project Structure
-- **Stuby.xcodeproj**: Main Xcode project file (no workspace or CocoaPods dependencies)
-- **Stuby/**: Main source code directory with MVVM architecture
+- **Stuppy.xcodeproj**: Main Xcode project file (no workspace or CocoaPods dependencies)
+- **Stuppy/**: Main source code directory with MVVM architecture
   - **Models/**: Data models (`Subscription.swift` with enums for billing cycles and categories)
   - **ViewModels/**: Business logic (`SubscriptionManager.swift` using ObservableObject)
   - **Views/**: SwiftUI views organized by functionality

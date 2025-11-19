@@ -22,7 +22,7 @@ class DashboardViewModel: ObservableObject {
     }
     
     var totalMonthlySpending: Double {
-        subscriptionManager.totalCurrentMonthSpending
+        subscriptionManager.totalUnpaidCurrentMonthSpending
     }
     
     var totalYearlySpending: Double {

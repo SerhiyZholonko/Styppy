@@ -10,9 +10,9 @@ struct SummaryCardsSection: View {
         VStack(spacing: 16) {
             HStack(spacing: 16) {
                 AnimatedSummaryCard(
-                    title: "Monthly Total",
+                    title: "To Pay This Month",
                     value: String(format: "$%.2f", monthlyTotal),
-                    icon: "calendar.circle.fill",
+                    icon: "creditcard.circle.fill",
                     gradient: Color.primaryGradient
                 )
 

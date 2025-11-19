@@ -191,7 +191,7 @@ struct SubscriptionListView: View {
                                             subscriptionManager: subscriptionManager
                                         )
                                     ) {
-                                        SubscriptionListRow(subscription: subscription)
+                                        SubscriptionListRow(subscription: subscription, subscriptionManager: subscriptionManager)
                                     }
                                 }
                                 .onDelete(perform: viewModel.deleteSubscriptions)

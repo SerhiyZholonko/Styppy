@@ -7,13 +7,13 @@
 	objects = {
 
 /* Begin PBXFileReference section */
-		182BB1162E7AA6D300F1B732 /* Stuby.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Stuby.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		182BB1162E7AA6D300F1B732 /* Stuppy.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Stuppy.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		182BB1182E7AA6D300F1B732 /* Stuby */ = {
+		182BB1182E7AA6D300F1B732 /* Stuppy */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = Stuby;
+			path = Stuppy;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -32,7 +32,7 @@
 		182BB10D2E7AA6D300F1B732 = {
 			isa = PBXGroup;
 			children = (
-				182BB1182E7AA6D300F1B732 /* Stuby */,
+				182BB1182E7AA6D300F1B732 /* Stuppy */,
 				182BB1172E7AA6D300F1B732 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -40,7 +40,7 @@
 		182BB1172E7AA6D300F1B732 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				182BB1162E7AA6D300F1B732 /* Stuby.app */,
+				182BB1162E7AA6D300F1B732 /* Stuppy.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -48,9 +48,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		182BB1152E7AA6D300F1B732 /* Stuby */ = {
+		182BB1152E7AA6D300F1B732 /* Stuppy */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 182BB1212E7AA6D500F1B732 /* Build configuration list for PBXNativeTarget "Stuby" */;
+			buildConfigurationList = 182BB1212E7AA6D500F1B732 /* Build configuration list for PBXNativeTarget "Stuppy" */;
 			buildPhases = (
 				182BB1122E7AA6D300F1B732 /* Sources */,
 				182BB1132E7AA6D300F1B732 /* Frameworks */,
@@ -61,13 +61,13 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				182BB1182E7AA6D300F1B732 /* Stuby */,
+				182BB1182E7AA6D300F1B732 /* Stuppy */,
 			);
-			name = Stuby;
+			name = Stuppy;
 			packageProductDependencies = (
 			);
 			productName = Stuby;
-			productReference = 182BB1162E7AA6D300F1B732 /* Stuby.app */;
+			productReference = 182BB1162E7AA6D300F1B732 /* Stuppy.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -85,7 +85,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 182BB1112E7AA6D300F1B732 /* Build configuration list for PBXProject "Stuby" */;
+			buildConfigurationList = 182BB1112E7AA6D300F1B732 /* Build configuration list for PBXProject "Stuppy" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -99,7 +99,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				182BB1152E7AA6D300F1B732 /* Stuby */,
+				182BB1152E7AA6D300F1B732 /* Stuppy */,
 			);
 		};
 /* End PBXProject section */
@@ -305,7 +305,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		182BB1112E7AA6D300F1B732 /* Build configuration list for PBXProject "Stuby" */ = {
+		182BB1112E7AA6D300F1B732 /* Build configuration list for PBXProject "Stuppy" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				182BB11F2E7AA6D500F1B732 /* Debug */,
@@ -314,7 +314,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		182BB1212E7AA6D500F1B732 /* Build configuration list for PBXNativeTarget "Stuby" */ = {
+		182BB1212E7AA6D500F1B732 /* Build configuration list for PBXNativeTarget "Stuppy" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				182BB1222E7AA6D500F1B732 /* Debug */,
