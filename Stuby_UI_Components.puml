@@ -1,0 +1,245 @@
+@startuml Stuby_UI_Components
+!theme plain
+
+title "Stuby - UI Components & View Composition"
+
+package "Main Views" #FFE0E6 {
+    class DashboardView {
+        @ObservedObject +subscriptionManager
+        @StateObject +viewModel
+        --
+        • Welcome section
+        • Summary cards  
+        • Upcoming renewals
+        • Recent subscriptions
+    }
+
+    class SubscriptionListView {
+        @ObservedObject +subscriptionManager
+        @StateObject +viewModel
+        --
+        • Search bar
+        • Category filters
+        • Subscription grid/list
+        • Empty state
+    }
+
+    class AddEditView {
+        @ObservedObject +subscriptionManager
+        @StateObject +viewModel
+        --
+        • Form fields
+        • Color picker
+        • Validation
+        • Save/Cancel actions
+    }
+
+    class AnalyticsView {
+        @ObservedObject +subscriptionManager
+        @StateObject +viewModel
+        --
+        • Statistics cards
+        • Category breakdown
+        • Trend charts
+        • Export options
+    }
+
+    class SubscriptionDetailView {
+        +subscription: Subscription
+        @ObservedObject +subscriptionManager
+        --
+        • Subscription info
+        • Payment history
+        • Edit/Delete actions
+        • Sharing options
+    }
+}
+
+package "Reusable Components" #F3E5F5 {
+    class CustomTabBar {
+        @Binding +selectedTab: Int
+        +onAddTapped: () -> Void
+        --
+        • Tab navigation
+        • Center floating button
+        • Custom styling
+    }
+
+    class SubscriptionCard {
+        +subscription: Subscription
+        +isIPad: Bool
+        --
+        • Subscription display
+        • Color indicator
+        • Price formatting
+        • Status badge
+    }
+
+    class WelcomeHeader {
+        +userName: String
+        +totalSpending: Double
+        --
+        • Greeting message
+        • Total spending
+        • Avatar/icon
+    }
+
+    class ColorPickerButton {
+        +color: String
+        +isSelected: Bool
+        +action: () -> Void
+        --
+        • Color circle
+        • Selection feedback
+        • Checkmark overlay
+        • Animations
+    }
+
+    class CategoryFilterButton {
+        +title: String
+        +isSelected: Bool
+        +icon: String?
+        +action: () -> Void
+        --
+        • Category name
+        • Icon display
+        • Selection state
+        • Pill design
+    }
+
+    class SubscriptionListRow {
+        +subscription: Subscription
+        --
+        • Compact info
+        • Price display
+        • Next billing
+        • Color accent
+    }
+
+    class AnalyticsCard {
+        +title: String
+        +value: String
+        +icon: String
+        --
+        • Metric display
+        • Icon + value
+        • Trend indicator
+        • Card styling
+    }
+
+    class CategoryBreakdownRow {
+        +category: SubscriptionCategory
+        +amount: Double
+        +percentage: Double
+        --
+        • Category info
+        • Amount + percentage
+        • Progress bar
+        • Color coding
+    }
+
+    class UpcomingRenewalRow {
+        +subscription: Subscription
+        --
+        • Service name
+        • Days until billing
+        • Amount due
+        • Urgency indicator
+    }
+}
+
+package "Supporting Components" #F8F9FA {
+    class AnimatedButton {
+        +title: String
+        +action: () -> Void
+        --
+        • Press animations
+        • Loading states
+        • Haptic feedback
+    }
+
+    class GlassMorphismCard {
+        +content: Content
+        --
+        • Blur background
+        • Rounded corners
+        • Shadow effects
+        • Modern styling
+    }
+
+    class EmptyStateView {
+        +title: String
+        +message: String
+        +actionTitle: String?
+        --
+        • Illustration
+        • Message text
+        • Call-to-action
+    }
+}
+
+package "Extensions & Utilities" #FFF8E1 {
+    class "Color+String" {
+        +init(stringColor: String)
+        --
+        • String to Color mapping
+        • Predefined colors
+        • Fallback handling
+    }
+
+    class "View+Extensions" {
+        +glassMorphism(): ViewModifier
+        +animatedButton(): ViewModifier
+        --
+        • Custom modifiers
+        • Reusable styling
+        • Animation helpers
+    }
+}
+
+' Component Usage Relationships
+DashboardView *-- WelcomeHeader : contains
+DashboardView *-- SubscriptionCard : displays multiple
+DashboardView *-- UpcomingRenewalRow : lists renewals
+DashboardView *-- AnalyticsCard : summary metrics
+
+SubscriptionListView *-- SubscriptionListRow : lists items
+SubscriptionListView *-- CategoryFilterButton : filter options
+SubscriptionListView *-- EmptyStateView : when no data
+
+AddEditView *-- ColorPickerButton : color selection
+AddEditView *-- AnimatedButton : save/cancel
+AddEditView *-- GlassMorphismCard : form sections
+
+AnalyticsView *-- AnalyticsCard : metric displays
+AnalyticsView *-- CategoryBreakdownRow : spending breakdown
+
+' Main Navigation
+DashboardView -up-> CustomTabBar : navigates via
+SubscriptionListView -up-> CustomTabBar : navigates via
+AddEditView -up-> CustomTabBar : navigates via
+AnalyticsView -up-> CustomTabBar : navigates via
+
+' Extensions Usage
+ColorPickerButton ..> "Color+String" : uses
+SubscriptionCard ..> "Color+String" : uses
+GlassMorphismCard ..> "View+Extensions" : implements
+AnimatedButton ..> "View+Extensions" : implements
+
+' Component Design Notes
+note top of SubscriptionCard : "Adaptive Component\n• iPhone: List row\n• iPad: Card layout\n• Responsive design"
+
+note bottom of ColorPickerButton : "Enhanced Color Picker\n• 10 predefined colors\n• Visual feedback\n• Grid layout"
+
+note right of CustomTabBar : "Custom Navigation\n• 4 main tabs\n• Floating action button\n• Smooth animations"
+
+note as ComponentArchitecture
+**Component Benefits:**
+• **Reusability** across views
+• **Consistent** design system
+• **Maintainable** codebase
+• **Testable** UI elements
+• **Responsive** layouts
+end note
+
+@enduml

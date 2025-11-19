@@ -1,0 +1,169 @@
+@startuml Stuby_MVVM_Architecture
+!theme plain
+
+title "Stuby - MVVM Core Architecture & Data Flow"
+
+package "Models (Data Layer)" #FFF3E0 {
+    class Subscription {
+        +id: UUID
+        +name: String
+        +price: Double
+        +billingCycle: BillingCycle
+        +category: SubscriptionCategory
+        +nextBillingDate: Date
+        +color: String
+        --
+        +monthlyPrice: Double
+        +daysUntilNextBilling: Int
+        +isOverdue: Bool
+    }
+
+    enum BillingCycle {
+        weekly, monthly
+        quarterly, yearly
+    }
+
+    enum SubscriptionCategory {
+        streaming, music, productivity
+        fitness, gaming, other
+        --
+        +icon: String
+        +color: Color
+    }
+}
+
+package "ViewModels (Business Logic)" #E8F5E8 {
+    class SubscriptionManager <<Single Source of Truth>> {
+        @Published +subscriptions: [Subscription]
+        --
+        +addSubscription(Subscription)
+        +updateSubscription(Subscription)
+        +deleteSubscription(Subscription)
+        +loadSubscriptions()
+        +saveSubscriptions()
+        --
+        +activeSubscriptions: [Subscription]
+        +totalMonthlySpending: Double
+        +upcomingRenewals: [Subscription]
+        +overdueSubscriptions: [Subscription]
+    }
+
+    class DashboardViewModel <<ObservableObject>> {
+        @Published +selectedTimeRange: TimeRange
+        +subscriptionManager: SubscriptionManager
+        --
+        +totalSpending: Double
+        +upcomingRenewals: [Subscription]
+        +categoryBreakdown: [CategoryData]
+        +recentSubscriptions: [Subscription]
+    }
+
+    class SubscriptionListViewModel <<ObservableObject>> {
+        @Published +searchText: String
+        @Published +selectedCategory: SubscriptionCategory?
+        @Published +showingAddSubscription: Bool
+        +subscriptionManager: SubscriptionManager
+        --
+        +filteredSubscriptions: [Subscription]
+        +selectCategory(SubscriptionCategory)
+        +deleteSubscriptions(IndexSet)
+    }
+
+    class AddEditViewModel <<ObservableObject>> {
+        @Published +name: String
+        @Published +price: String
+        @Published +selectedCategory: SubscriptionCategory
+        @Published +selectedColor: String
+        +subscriptionManager: SubscriptionManager
+        --
+        +saveSubscription()
+        +canSave: Bool
+        +isEditing: Bool
+    }
+
+    class AnalyticsViewModel <<ObservableObject>> {
+        @Published +selectedPeriod: AnalyticsPeriod
+        +subscriptionManager: SubscriptionManager
+        --
+        +categorySpending: [CategorySpending]
+        +monthlyTrend: [MonthlySpending]
+        +averageSpending: Double
+    }
+}
+
+package "Views (Presentation Layer)" #FFE0E6 {
+    class ContentView {
+        @ObservedObject +subscriptionManager: SubscriptionManager
+        @State +selectedTab: Int
+    }
+
+    class DashboardView {
+        @ObservedObject +subscriptionManager: SubscriptionManager
+        @StateObject +viewModel: DashboardViewModel
+    }
+
+    class SubscriptionListView {
+        @ObservedObject +subscriptionManager: SubscriptionManager
+        @StateObject +viewModel: SubscriptionListViewModel
+    }
+
+    class AddEditView {
+        @ObservedObject +subscriptionManager: SubscriptionManager
+        @StateObject +viewModel: AddEditViewModel
+    }
+
+    class AnalyticsView {
+        @ObservedObject +subscriptionManager: SubscriptionManager
+        @StateObject +viewModel: AnalyticsViewModel
+    }
+}
+
+package "Services" #E1F5FE {
+    class NotificationManager {
+        +shared: NotificationManager
+        --
+        +scheduleNotification(Subscription)
+        +cancelNotification(String)
+    }
+}
+
+' Model Relationships
+Subscription *-- BillingCycle
+Subscription *-- SubscriptionCategory
+
+' ViewModel Dependencies (Data Flow)
+SubscriptionManager ||--o{ Subscription : manages
+DashboardViewModel *-- SubscriptionManager : observes
+SubscriptionListViewModel *-- SubscriptionManager : observes
+AddEditViewModel *-- SubscriptionManager : modifies
+AnalyticsViewModel *-- SubscriptionManager : observes
+
+' View-ViewModel Bindings (MVVM Pattern)
+ContentView *-- SubscriptionManager : environment
+DashboardView *-- DashboardViewModel : @StateObject
+DashboardView *-- SubscriptionManager : @ObservedObject
+SubscriptionListView *-- SubscriptionListViewModel : @StateObject
+AddEditView *-- AddEditViewModel : @StateObject
+AnalyticsView *-- AnalyticsViewModel : @StateObject
+
+' Services
+SubscriptionManager ..> NotificationManager : triggers
+
+' Data Flow Annotations
+note top of SubscriptionManager : "Central Data Hub\n• UserDefaults persistence\n• @Published triggers UI updates\n• CRUD operations"
+
+note bottom of DashboardViewModel : "Feature ViewModels\n• Business logic\n• Data transformation\n• Computed properties"
+
+note right of DashboardView : "SwiftUI Views\n• @StateObject (ownership)\n• @ObservedObject (dependency)\n• Reactive UI updates"
+
+' MVVM Flow
+note as MVVMFlow
+**MVVM Data Flow:**
+1. User Action → View
+2. View → ViewModel method
+3. ViewModel → SubscriptionManager
+4. Manager updates @Published data
+5. SwiftUI rebuilds UI automatically
+end note
+
+@enduml
