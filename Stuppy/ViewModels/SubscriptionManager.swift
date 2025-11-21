@@ -14,6 +14,11 @@ class SubscriptionManager: ObservableObject {
         processAutoRenewals()
         processPaymentStatusReset()
     }
+    
+    func refreshSubscriptions() {
+        processAutoRenewals()
+        processPaymentStatusReset()
+    }
 
     func addSubscription(_ subscription: Subscription) {
         subscriptions.append(subscription)
@@ -42,6 +47,12 @@ class SubscriptionManager: ObservableObject {
     func markSubscriptionAsPaid(_ subscription: Subscription) {
         if let index = subscriptions.firstIndex(where: { $0.id == subscription.id }) {
             subscriptions[index].markAsPaid()
+            // Auto-renew subscription when marked as paid
+            if subscriptions[index].repetitionType != .disabled {
+                subscriptions[index].updateNextBillingDate()
+                // Reset payment status for the new billing period
+                subscriptions[index].resetPaymentStatus()
+            }
             saveSubscriptions()
         }
     }
@@ -52,6 +63,12 @@ class SubscriptionManager: ObservableObject {
                 subscriptions[index].resetPaymentStatus()
             } else {
                 subscriptions[index].markAsPaid()
+                // Auto-renew subscription when marked as paid
+                if subscriptions[index].repetitionType != .disabled {
+                    subscriptions[index].updateNextBillingDate()
+                    // Reset payment status for the new billing period
+                    subscriptions[index].resetPaymentStatus()
+                }
             }
             saveSubscriptions()
         }
@@ -63,7 +80,7 @@ class SubscriptionManager: ObservableObject {
 
     var upcomingSubscriptions: [Subscription] {
         activeSubscriptions
-            .filter { $0.daysUntilNextBilling <= 7 && !$0.isOverdue }
+            .filter { $0.daysUntilNextBilling <= 7 && !$0.isOverdue && !$0.isPaidForCurrentMonth }
             .sorted { $0.nextBillingDate < $1.nextBillingDate }
     }
 
@@ -125,11 +142,14 @@ class SubscriptionManager: ObservableObject {
         for i in subscriptions.indices {
             let subscription = subscriptions[i]
 
+            // Process auto-renewal when subscription is overdue OR when 1 day remains
             if subscription.isActive &&
                subscription.repetitionType != .disabled &&
-               subscription.isOverdue {
+               (subscription.isOverdue || subscription.daysUntilNextBilling <= 1) {
 
                 subscriptions[i].updateNextBillingDate()
+                // Reset payment status when auto-renewing
+                subscriptions[i].resetPaymentStatus()
                 hasChanges = true
             }
         }

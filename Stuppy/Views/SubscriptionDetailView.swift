@@ -115,7 +115,7 @@ struct SubscriptionDetailView: View {
                     } label: {
                         HStack {
                             Image(systemName: "arrow.clockwise")
-                            Text("Mark as Renewed")
+                            Text("Payment")
                         }
                         .frame(maxWidth: .infinity)
                         .padding()
@@ -137,9 +137,28 @@ struct SubscriptionDetailView: View {
                         .foregroundColor(.white)
                         .cornerRadius(12)
                     }
+
+                    Button {
+                        // Haptic feedback for delete
+                        let impactFeedback = UIImpactFeedbackGenerator(style: .heavy)
+                        impactFeedback.impactOccurred()
+                        
+                        subscriptionManager.deleteSubscription(subscription)
+                    } label: {
+                        HStack {
+                            Image(systemName: "trash.fill")
+                            Text("Delete")
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.red)
+                        .foregroundColor(.white)
+                        .cornerRadius(12)
+                    }
                 }
             }
             .padding()
+            .padding(.bottom, 100) // Add extra padding to avoid tab bar overlap
         }
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {

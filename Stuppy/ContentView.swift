@@ -59,6 +59,9 @@ struct ContentView: View {
         .fullScreenCover(isPresented: $showingAddSubscription) {
             AddEditSubscriptionView(subscriptionManager: subscriptionManager)
         }
+        .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
+            subscriptionManager.refreshSubscriptions()
+        }
     }
 
     private var currentTransition: AnyTransition {

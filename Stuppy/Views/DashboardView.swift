@@ -79,15 +79,14 @@ struct DashboardView: View {
 
                             LazyVStack(spacing: 12) {
                                 ForEach(viewModel.recentActiveSubscriptions) { subscription in
-                                    NavigationLink(
+                                    InteractiveDashboardSubscriptionRow(
+                                        subscription: subscription,
+                                        subscriptionManager: subscriptionManager,
                                         destination: SubscriptionDetailView(
                                             subscription: subscription,
                                             subscriptionManager: subscriptionManager
                                         )
-                                    ) {
-                                        AnimatedSubscriptionRow(subscription: subscription)
-                                    }
-                                    .buttonStyle(PlainButtonStyle())
+                                    )
                                 }
                             }
                         }
@@ -127,6 +126,76 @@ struct DashboardView: View {
         }
     }
 
+}
+
+
+
+// MARK: - Interactive Dashboard Subscription Row
+struct InteractiveDashboardSubscriptionRow<Destination: View>: View {
+    let subscription: Subscription
+    let subscriptionManager: SubscriptionManager
+    let destination: Destination
+    
+    @State private var showingDetail = false
+    @State private var showingActionSheet = false
+    
+    var body: some View {
+        AnimatedSubscriptionRow(subscription: subscription)
+            .contentShape(Rectangle())
+            .onTapGesture {
+                showingDetail = true
+            }
+            .onLongPressGesture(minimumDuration: 0.5) {
+                // Haptic feedback for long press
+                let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
+                impactFeedback.impactOccurred()
+                
+                print("Long press detected on dashboard for \(subscription.name)")
+                showingActionSheet = true
+            }
+            .background(
+                NavigationLink(
+                    destination: destination,
+                    isActive: $showingDetail
+                ) {
+                    EmptyView()
+                }
+                .opacity(0)
+            )
+            .confirmationDialog(
+                subscription.name,
+                isPresented: $showingActionSheet,
+                titleVisibility: .visible
+            ) {
+                Button(subscription.isPaidForCurrentMonth ? "Mark as Unpaid" : "Mark as Paid") {
+                    handlePaymentToggle()
+                }
+                
+                Button("Delete", role: .destructive) {
+                    deleteSubscription()
+                }
+                
+                Button("Cancel", role: .cancel) { }
+            } message: {
+                Text("Choose an action")
+            }
+    }
+    
+    private func handlePaymentToggle() {
+        // Light haptic feedback
+        let impactFeedback = UIImpactFeedbackGenerator(style: .light)
+        impactFeedback.impactOccurred()
+        
+        subscriptionManager.togglePaymentStatus(subscription)
+    }
+    
+    private func deleteSubscription() {
+        // Strong haptic feedback for delete
+        let impactFeedback = UIImpactFeedbackGenerator(style: .heavy)
+        impactFeedback.impactOccurred()
+        
+        subscriptionManager.deleteSubscription(subscription)
+    }
 }
 
 #Preview {

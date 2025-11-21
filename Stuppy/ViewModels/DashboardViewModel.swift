@@ -17,7 +17,9 @@ class DashboardViewModel: ObservableObject {
         let nextWeek = calendar.date(byAdding: .day, value: 7, to: today) ?? today
 
         return subscriptionManager.activeSubscriptions.filter { subscription in
-            subscription.nextBillingDate >= today && subscription.nextBillingDate <= nextWeek
+            subscription.nextBillingDate >= today && 
+            subscription.nextBillingDate <= nextWeek &&
+            !subscription.isPaidForCurrentMonth
         }.count
     }
     

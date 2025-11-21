@@ -36,17 +36,28 @@ Stuppy is a subscription management app that helps users track recurring subscri
 ### Project Structure
 - **Stuppy.xcodeproj**: Main Xcode project file (no workspace or CocoaPods dependencies)
 - **Stuppy/**: Main source code directory with MVVM architecture
-  - **Models/**: Data models (`Subscription.swift` with enums for billing cycles and categories)
-  - **ViewModels/**: Business logic (`SubscriptionManager.swift` using ObservableObject)
+  - **Models/**: Data models (`Subscription.swift`, `Theme.swift` with enums for billing cycles and categories)
+  - **ViewModels/**: Business logic layer with specialized view models
+    - `SubscriptionManager.swift` - Central ObservableObject for subscription state
+    - `DashboardViewModel.swift`, `AnalyticsViewModel.swift`, etc. - Feature-specific view models
   - **Views/**: SwiftUI views organized by functionality
+    - **Components/**: Reusable UI components following single responsibility principle
   - **Services/**: Utility services (`NotificationManager.swift` for local notifications)
+  - **Extensions/**: Swift extensions (`Color+String.swift` for theme system)
 
 ### Core Architecture Pattern
 **MVVM (Model-View-ViewModel)** with SwiftUI:
-- **Models**: `Subscription`, `BillingCycle`, `SubscriptionCategory` enums
-- **ViewModels**: `SubscriptionManager` (ObservableObject for state management)
-- **Views**: SwiftUI views with `@StateObject` and `@ObservedObject` property wrappers
-- **Services**: `NotificationManager` singleton for notification handling
+- **Models**: 
+  - `Subscription` with billing cycle and category enums (`BillingCycle`, `SubscriptionCategory`, `RepetitionType`)
+  - `ThemeManager` for light/dark mode theming
+- **ViewModels**: 
+  - `SubscriptionManager` - Central ObservableObject acting as single source of truth
+  - Feature-specific ViewModels: `DashboardViewModel`, `AnalyticsViewModel`, `AddEditSubscriptionViewModel`, etc.
+- **Views**: SwiftUI views with proper ownership patterns
+  - `@StateObject` for view model ownership
+  - `@ObservedObject` for dependency injection
+  - `@EnvironmentObject` for theme management
+- **Services**: `NotificationManager` singleton for UNUserNotificationCenter management
 
 ### Key Features
 - **Tab-based Navigation**: Dashboard, Subscriptions List, Analytics, Settings
@@ -56,12 +67,13 @@ Stuppy is a subscription management app that helps users track recurring subscri
 - **Category System**: 10 predefined categories with colors and SF Symbols icons
 - **Billing Cycles**: Weekly, Monthly, Quarterly, Yearly with automatic calculations
 
-### Data Flow
-1. `SubscriptionManager` acts as single source of truth for subscription data
-2. Views observe manager through `@ObservedObject` or `@StateObject`
-3. Manager persists data to UserDefaults on every mutation
-4. `NotificationManager` schedules/cancels notifications based on subscription changes
-5. Computed properties provide derived data (monthly/yearly totals, upcoming renewals)
+### Data Flow & State Management
+1. **Central State**: `SubscriptionManager` acts as single source of truth for subscription data
+2. **Reactive Updates**: Views observe manager through `@ObservedObject` or `@StateObject` 
+3. **Persistence**: Manager automatically persists data to UserDefaults using JSON encoding on every mutation
+4. **Side Effects**: `NotificationManager` schedules/cancels notifications based on subscription changes
+5. **Computed Properties**: Manager provides derived data (monthly/yearly totals, upcoming renewals, category breakdowns)
+6. **Auto-Processing**: Automatic handling of subscription renewals and payment status resets on app launch
 
 ### View Hierarchy
 - `StubyApp.swift`: App entry point with notification permission request
@@ -130,3 +142,25 @@ Default subscriptions include:
 - **Smart Aggregation**: Total spending calculations consider only active subscriptions
 - **Upcoming Logic**: 7-day window for upcoming renewals with overdue detection
 - **Category Analytics**: Per-category spending breakdowns and subscription counts
+- **Payment Tracking**: Current month spending with paid/unpaid status tracking
+- **Overdue Handling**: Automatic detection and processing of overdue subscriptions
+
+### Architecture Documentation
+The project includes PlantUML architecture diagrams:
+- **Stuby_MVVM_Architecture.puml**: Complete MVVM data flow and relationships
+- **Stuby_UI_Components.puml**: UI component composition and reusable elements
+
+These diagrams provide visual documentation of:
+- Model relationships and enums
+- ViewModel dependencies and data flow
+- View-ViewModel bindings using SwiftUI property wrappers
+- Component reusability patterns
+- Service integrations
+
+### Development Patterns
+- **Single Responsibility**: Each ViewModel handles a specific feature area
+- **Dependency Injection**: ViewModels receive SubscriptionManager as dependency
+- **Reactive Programming**: `@Published` properties trigger automatic UI updates
+- **Computed Properties**: Extensive use for derived data calculations
+- **Error Handling**: Graceful fallbacks in JSON encoding/decoding operations
+- **Migration Logic**: Built-in data migration for existing user data

@@ -346,6 +346,7 @@ struct AnalyticsView: View {
                         }
                     }
                     .padding(.vertical, isIPad ? 40 : 20)
+                    .padding(.bottom, 100) // Add extra padding to avoid tab bar overlap
                 }
                 .navigationBarHidden(true)
             }

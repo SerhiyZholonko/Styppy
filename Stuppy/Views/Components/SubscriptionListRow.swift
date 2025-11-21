@@ -1,11 +1,12 @@
 import SwiftUI
 
 struct SubscriptionListRow: View {
-    let subscription: Subscription
+    @State var subscription: Subscription
     let subscriptionManager: SubscriptionManager?
+    @State private var isProcessing = false
     
     init(subscription: Subscription, subscriptionManager: SubscriptionManager? = nil) {
-        self.subscription = subscription
+        self._subscription = State(initialValue: subscription)
         self.subscriptionManager = subscriptionManager
     }
 
@@ -78,22 +79,85 @@ struct SubscriptionListRow: View {
                             .foregroundColor(.secondary)
                     }
                     
-                    // Payment toggle button
+                    // Simple payment button
                     if let manager = subscriptionManager {
-                        Button(action: {
-                            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                                manager.togglePaymentStatus(subscription)
-                            }
-                        }) {
-                            Image(systemName: subscription.isPaidForCurrentMonth ? "checkmark.circle.fill" : "circle")
-                                .font(.title3)
-                                .foregroundColor(subscription.isPaidForCurrentMonth ? .green : .secondary)
+                        AnimatedPaymentButton(
+                            isPaid: subscription.isPaidForCurrentMonth,
+                            isProcessing: $isProcessing,
+                            isAnimating: .constant(false),
+                            showingCheckmark: .constant(false)
+                        ) {
+                            handlePaymentToggle(manager: manager)
                         }
-                        .buttonStyle(PlainButtonStyle())
                     }
                 }
             }
         }
         .padding(.vertical, 4)
+    }
+    
+    private func handlePaymentToggle(manager: SubscriptionManager) {
+        // Light haptic feedback
+        let impactFeedback = UIImpactFeedbackGenerator(style: .light)
+        impactFeedback.impactOccurred()
+        
+        // Start processing state
+        withAnimation(.easeInOut(duration: 0.3)) {
+            isProcessing = true
+        }
+        
+        // Process payment after delay to show processing state
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
+            manager.togglePaymentStatus(subscription)
+            // Update local state to reflect changes
+            if let updatedSubscription = manager.subscriptions.first(where: { $0.id == subscription.id }) {
+                subscription = updatedSubscription
+            }
+            
+            // End processing state
+            withAnimation(.easeInOut(duration: 0.5)) {
+                isProcessing = false
+            }
+        }
+    }
+}
+
+// MARK: - Simple Payment Button Component
+struct AnimatedPaymentButton: View {
+    let isPaid: Bool
+    @Binding var isProcessing: Bool
+    @Binding var isAnimating: Bool
+    @Binding var showingCheckmark: Bool
+    let action: () -> Void
+    
+    private var iconName: String {
+        if isProcessing {
+            return "circle.circle"
+        } else if isPaid {
+            return "checkmark.circle.fill"
+        } else {
+            return "circle"
+        }
+    }
+    
+    private var iconColor: Color {
+        if isPaid {
+            return .green
+        } else {
+            return .secondary
+        }
+    }
+    
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: iconName)
+                .font(.title3)
+                .foregroundColor(iconColor)
+                .scaleEffect(isProcessing ? 1.2 : 1.0)
+                .animation(.easeInOut(duration: 0.3), value: isProcessing)
+                .animation(.easeInOut(duration: 0.5), value: isPaid)
+        }
+        .buttonStyle(PlainButtonStyle())
+        .disabled(isProcessing)
     }
 }
