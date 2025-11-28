@@ -16,7 +16,7 @@ struct SubscriptionListView: View {
             let isLandscape = screenWidth > geometry.size.height
             let _ = isIPad && isLandscape ? 2 : 1  // Used for layout logic in view
             
-            NavigationView {
+            NavigationStack {
                 VStack(spacing: 0) {
                     // Header with Title and Search
                     VStack(spacing: isIPad ? 20 : 16) {
@@ -145,12 +145,7 @@ struct SubscriptionListView: View {
                                         ForEach(Array(chunked.enumerated()), id: \.offset) { index, chunk in
                                             HStack(spacing: 24) {
                                                 ForEach(chunk) { subscription in
-                                                    NavigationLink(
-                                                        destination: SubscriptionDetailView(
-                                                            subscription: subscription,
-                                                            subscriptionManager: subscriptionManager
-                                                        )
-                                                    ) {
+                                                    NavigationLink(value: subscription) {
                                                         SubscriptionCard(subscription: subscription, isIPad: true)
                                                     }
                                                     .buttonStyle(PlainButtonStyle())
@@ -165,12 +160,7 @@ struct SubscriptionListView: View {
                                     } else {
                                         // Portrait - 1 column with enhanced cards
                                         ForEach(viewModel.filteredSubscriptions) { subscription in
-                                            NavigationLink(
-                                                destination: SubscriptionDetailView(
-                                                    subscription: subscription,
-                                                    subscriptionManager: subscriptionManager
-                                                )
-                                            ) {
+                                            NavigationLink(value: subscription) {
                                                 SubscriptionCard(subscription: subscription, isIPad: true)
                                             }
                                             .buttonStyle(PlainButtonStyle())
@@ -187,12 +177,24 @@ struct SubscriptionListView: View {
                                 ForEach(viewModel.filteredSubscriptions) { subscription in
                                     InteractiveSubscriptionRow(
                                         subscription: subscription,
-                                        subscriptionManager: subscriptionManager,
-                                        destination: SubscriptionDetailView(
-                                            subscription: subscription,
-                                            subscriptionManager: subscriptionManager
-                                        )
+                                        subscriptionManager: subscriptionManager
                                     )
+                                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                                        Button {
+                                            subscriptionManager.deleteSubscription(subscription)
+                                        } label: {
+                                            Label("Delete", systemImage: "trash")
+                                        }
+                                        .tint(.red)
+                                        
+                                        Button {
+                                            subscriptionManager.togglePaymentStatus(subscription)
+                                        } label: {
+                                            Label(subscription.isPaidForCurrentMonth ? "Mark Unpaid" : "Mark Paid", 
+                                                  systemImage: subscription.isPaidForCurrentMonth ? "xmark.circle" : "checkmark.circle")
+                                        }
+                                        .tint(subscription.isPaidForCurrentMonth ? .orange : .green)
+                                    }
                                 }
                                 .onDelete(perform: viewModel.deleteSubscriptions)
                             }
@@ -205,7 +207,12 @@ struct SubscriptionListView: View {
                     AddEditSubscriptionView(subscriptionManager: subscriptionManager)
                 }
             }
-            .navigationViewStyle(StackNavigationViewStyle())
+            .navigationDestination(for: Subscription.self) { subscription in
+                SubscriptionDetailView(
+                    subscription: subscription,
+                    subscriptionManager: subscriptionManager
+                )
+            }
         }
     }
 
@@ -214,13 +221,11 @@ struct SubscriptionListView: View {
 
 
 // MARK: - Interactive Subscription Row
-struct InteractiveSubscriptionRow<Destination: View>: View {
+struct InteractiveSubscriptionRow: View {
     let subscription: Subscription
     let subscriptionManager: SubscriptionManager
-    let destination: Destination
     
     @State private var showingDetail = false
-    @State private var showingActionSheet = false
     
     var body: some View {
         HStack {
@@ -301,58 +306,14 @@ struct InteractiveSubscriptionRow<Destination: View>: View {
             .onTapGesture {
                 showingDetail = true
             }
-            .onLongPressGesture(minimumDuration: 0.5) {
-                // Haptic feedback for long press
-                let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
-                impactFeedback.impactOccurred()
-                
-                print("Long press detected for \(subscription.name)")
-                showingActionSheet = true
-            }
         }
         .padding(.vertical, 4)
-        .background(
-            NavigationLink(
-                destination: destination,
-                isActive: $showingDetail
-            ) {
-                EmptyView()
-            }
-            .opacity(0)
-        )
-        .confirmationDialog(
-            subscription.name,
-            isPresented: $showingActionSheet,
-            titleVisibility: .visible
-        ) {
-            Button(subscription.isPaidForCurrentMonth ? "Mark as Unpaid" : "Mark as Paid") {
-                handlePaymentToggle()
-            }
-            
-            Button("Delete", role: .destructive) {
-                deleteSubscription()
-            }
-            
-            Button("Cancel", role: .cancel) { }
-        } message: {
-            Text("Choose an action")
+        .navigationDestination(isPresented: $showingDetail) {
+            SubscriptionDetailView(
+                subscription: subscription,
+                subscriptionManager: subscriptionManager
+            )
         }
-    }
-    
-    private func handlePaymentToggle() {
-        // Light haptic feedback
-        let impactFeedback = UIImpactFeedbackGenerator(style: .light)
-        impactFeedback.impactOccurred()
-        
-        subscriptionManager.togglePaymentStatus(subscription)
-    }
-    
-    private func deleteSubscription() {
-        // Strong haptic feedback for delete
-        let impactFeedback = UIImpactFeedbackGenerator(style: .heavy)
-        impactFeedback.impactOccurred()
-        
-        subscriptionManager.deleteSubscription(subscription)
     }
 }
 

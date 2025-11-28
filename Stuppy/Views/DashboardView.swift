@@ -11,7 +11,7 @@ struct DashboardView: View {
     }
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ScrollView {
                 LazyVStack(spacing: 24) {
                     // Welcome Header
@@ -77,18 +77,41 @@ struct DashboardView: View {
                                 Spacer()
                             }
 
-                            LazyVStack(spacing: 12) {
+                            List {
                                 ForEach(viewModel.recentActiveSubscriptions) { subscription in
                                     InteractiveDashboardSubscriptionRow(
                                         subscription: subscription,
-                                        subscriptionManager: subscriptionManager,
-                                        destination: SubscriptionDetailView(
-                                            subscription: subscription,
-                                            subscriptionManager: subscriptionManager
-                                        )
+                                        subscriptionManager: subscriptionManager
                                     )
+                                    .listRowInsets(EdgeInsets())
+                                    .listRowBackground(Color.clear)
+                                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                                        Button {
+                                            subscriptionManager.deleteSubscription(subscription)
+                                        } label: {
+                                            Label("Delete", systemImage: "trash")
+                                        }
+                                        .tint(.red)
+                                        
+                                        Button {
+                                            subscriptionManager.togglePaymentStatus(subscription)
+                                        } label: {
+                                            Label(subscription.isPaidForCurrentMonth ? "Mark Unpaid" : "Mark Paid", 
+                                                  systemImage: subscription.isPaidForCurrentMonth ? "xmark.circle" : "checkmark.circle")
+                                        }
+                                        .tint(subscription.isPaidForCurrentMonth ? .orange : .green)
+                                    }
+                                }
+                                .onDelete { indexSet in
+                                    for index in indexSet {
+                                        let subscription = viewModel.recentActiveSubscriptions[index]
+                                        subscriptionManager.deleteSubscription(subscription)
+                                    }
                                 }
                             }
+                            .listStyle(PlainListStyle())
+                            .frame(height: CGFloat(viewModel.recentActiveSubscriptions.count * 80))
+                            .scrollDisabled(true)
                         }
                         .padding(20)
                         .glassMorphismCard()
@@ -117,7 +140,6 @@ struct DashboardView: View {
             .background(Color.clear)
             .navigationBarHidden(true)
         }
-        .navigationViewStyle(StackNavigationViewStyle())
         .fullScreenCover(isPresented: $viewModel.showingCalendar) {
             NotificationCalendarView(
                 subscriptionManager: subscriptionManager,
@@ -131,13 +153,11 @@ struct DashboardView: View {
 
 
 // MARK: - Interactive Dashboard Subscription Row
-struct InteractiveDashboardSubscriptionRow<Destination: View>: View {
+struct InteractiveDashboardSubscriptionRow: View {
     let subscription: Subscription
     let subscriptionManager: SubscriptionManager
-    let destination: Destination
     
     @State private var showingDetail = false
-    @State private var showingActionSheet = false
     
     var body: some View {
         AnimatedSubscriptionRow(subscription: subscription)
@@ -145,58 +165,15 @@ struct InteractiveDashboardSubscriptionRow<Destination: View>: View {
             .onTapGesture {
                 showingDetail = true
             }
-            .onLongPressGesture(minimumDuration: 0.5) {
-                // Haptic feedback for long press
-                let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
-                impactFeedback.impactOccurred()
-                
-                print("Long press detected on dashboard for \(subscription.name)")
-                showingActionSheet = true
+            .navigationDestination(isPresented: $showingDetail) {
+                SubscriptionDetailView(
+                    subscription: subscription,
+                    subscriptionManager: subscriptionManager
+                )
             }
-            .background(
-                NavigationLink(
-                    destination: destination,
-                    isActive: $showingDetail
-                ) {
-                    EmptyView()
-                }
-                .opacity(0)
-            )
-            .confirmationDialog(
-                subscription.name,
-                isPresented: $showingActionSheet,
-                titleVisibility: .visible
-            ) {
-                Button(subscription.isPaidForCurrentMonth ? "Mark as Unpaid" : "Mark as Paid") {
-                    handlePaymentToggle()
-                }
-                
-                Button("Delete", role: .destructive) {
-                    deleteSubscription()
-                }
-                
-                Button("Cancel", role: .cancel) { }
-            } message: {
-                Text("Choose an action")
-            }
-    }
-    
-    private func handlePaymentToggle() {
-        // Light haptic feedback
-        let impactFeedback = UIImpactFeedbackGenerator(style: .light)
-        impactFeedback.impactOccurred()
-        
-        subscriptionManager.togglePaymentStatus(subscription)
-    }
-    
-    private func deleteSubscription() {
-        // Strong haptic feedback for delete
-        let impactFeedback = UIImpactFeedbackGenerator(style: .heavy)
-        impactFeedback.impactOccurred()
-        
-        subscriptionManager.deleteSubscription(subscription)
     }
 }
+
 
 #Preview {
     DashboardView(subscriptionManager: SubscriptionManager())

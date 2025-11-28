@@ -15,7 +15,7 @@ struct NotificationCalendarView: View {
     }()
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             VStack(spacing: 0) {
             // Header
             HStack {
@@ -112,12 +112,7 @@ struct NotificationCalendarView: View {
 
                             LazyVStack(spacing: 12) {
                                 ForEach(subscriptionsForSelectedDate) { subscription in
-                                    NavigationLink(
-                                        destination: SubscriptionDetailView(
-                                            subscription: subscription,
-                                            subscriptionManager: subscriptionManager
-                                        )
-                                    ) {
+                                    NavigationLink(value: subscription) {
                                         CalendarSubscriptionRow(subscription: subscription)
                                     }
                                     .buttonStyle(PlainButtonStyle())
@@ -198,7 +193,12 @@ struct NotificationCalendarView: View {
         .cornerRadius(20, corners: [.topLeft, .topRight])
         .shadow(color: theme.shadowColor, radius: 20, x: 0, y: -5)
         }
-        .navigationViewStyle(StackNavigationViewStyle())
+        .navigationDestination(for: Subscription.self) { subscription in
+            SubscriptionDetailView(
+                subscription: subscription,
+                subscriptionManager: subscriptionManager
+            )
+        }
     }
 
     private var subscriptionsForSelectedDate: [Subscription] {

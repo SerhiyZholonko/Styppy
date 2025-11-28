@@ -74,7 +74,7 @@ enum SubscriptionCategory: String, CaseIterable, Codable {
     }
 }
 
-struct Subscription: Identifiable, Codable {
+struct Subscription: Identifiable, Codable, Hashable {
     let id: UUID
     var name: String
     var price: Double

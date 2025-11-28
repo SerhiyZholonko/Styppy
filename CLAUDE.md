@@ -115,14 +115,32 @@ Default subscriptions include:
 - Adobe Creative Cloud (Productivity, $52.99/month)
 
 ### Development Notes
-- No CocoaPods or external package management
-- Uses `@StateObject` for view model ownership
-- UserDefaults persistence with Codable protocol
-- Custom tab bar implementation with center floating action button
-- Glassmorphism design patterns throughout UI
+- **Pure Native**: No CocoaPods, SPM, or external dependencies - pure SwiftUI/Foundation implementation
+- **SwiftUI Previews**: All major views include `PreviewProvider` for live development
+- **State Management**: Uses `@StateObject` for view model ownership, `@ObservedObject` for dependency injection
+- **Data Persistence**: UserDefaults with Codable protocol - simple but effective for subscription data
+- **Custom UI**: Custom tab bar with center floating action button and glassmorphism design patterns
 - **iPad Optimization**: Full-screen analytics with adaptive layouts for landscape/portrait orientations
 - **Responsive Design**: Device-specific spacing, fonts, and component sizing
 - **Enhanced Components**: Animated progress bars, interactive charts, and improved visual hierarchy
+
+### Development Workflow
+```bash
+# Open project in Xcode
+open Stuppy.xcodeproj
+
+# Use SwiftUI Previews for rapid development
+# Each major view has preview providers for instant feedback
+
+# For development builds, use Xcode's built-in simulator
+# No additional setup required - pure native implementation
+
+# Common debugging commands
+xcodebuild -project Stuppy.xcodeproj -scheme Stuppy -destination 'platform=iOS Simulator,name=iPhone 15' -showBuildSettings
+
+# Check code coverage (if enabled)
+xcodebuild test -project Stuppy.xcodeproj -scheme Stuppy -destination 'platform=iOS Simulator,name=iPhone 15' -enableCodeCoverage YES
+```
 
 ### Component Architecture
 - **Views/Components/**: Reusable SwiftUI components following single responsibility principle
@@ -164,3 +182,25 @@ These diagrams provide visual documentation of:
 - **Computed Properties**: Extensive use for derived data calculations
 - **Error Handling**: Graceful fallbacks in JSON encoding/decoding operations
 - **Migration Logic**: Built-in data migration for existing user data
+
+### Testing and Quality Assurance
+- **SwiftUI Previews**: Primary development tool for component testing and UI validation
+- **Manual Testing**: Current approach using Xcode simulator across iPhone/iPad devices
+- **No Unit Tests**: Opportunity for improvement - ViewModels are designed for testability
+- **Architecture**: Clean separation enables easy unit testing of business logic
+- **Error Handling**: Defensive programming with graceful fallbacks throughout data layer
+
+### Performance Considerations
+- **Reactive Updates**: SwiftUI only rebuilds affected UI components through `@Published` bindings
+- **Lazy Loading**: Components use appropriate lazy evaluation where beneficial
+- **Memory Management**: Proper use of weak references and ObservableObject patterns
+- **Data Persistence**: Simple UserDefaults approach suitable for subscription data volume
+- **Sample Data**: Lightweight initialization with automatic cleanup of development data
+
+### Common Debugging Tips
+- **SwiftUI Previews**: Primary tool for UI development and debugging
+- **Xcode Console**: Monitor subscription state changes and auto-renewal processing
+- **UserDefaults**: Data persisted as JSON - can be inspected via debugger or console
+- **Notification Testing**: Use iOS Simulator's notification testing features
+- **State Observation**: Use `@Published` property breakpoints to track data flow
+- **Memory Leaks**: Monitor for retain cycles in ObservableObject relationships

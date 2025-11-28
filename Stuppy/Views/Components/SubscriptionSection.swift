@@ -37,19 +37,41 @@ struct SubscriptionSection: View {
                     .cornerRadius(12)
             }
 
-            LazyVStack(spacing: 12) {
+            List {
                 ForEach(subscriptions) { subscription in
-                    NavigationLink(
-                        destination: SubscriptionDetailView(
-                            subscription: subscription,
-                            subscriptionManager: subscriptionManager
-                        )
-                    ) {
-                        AnimatedSubscriptionRow(subscription: subscription)
+                    InteractiveSubscriptionSectionRow(
+                        subscription: subscription,
+                        subscriptionManager: subscriptionManager
+                    )
+                    .listRowInsets(EdgeInsets())
+                    .listRowBackground(Color.clear)
+                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                        Button {
+                            subscriptionManager.deleteSubscription(subscription)
+                        } label: {
+                            Label("Delete", systemImage: "trash")
+                        }
+                        .tint(.red)
+                        
+                        Button {
+                            subscriptionManager.togglePaymentStatus(subscription)
+                        } label: {
+                            Label(subscription.isPaidForCurrentMonth ? "Mark Unpaid" : "Mark Paid", 
+                                  systemImage: subscription.isPaidForCurrentMonth ? "xmark.circle" : "checkmark.circle")
+                        }
+                        .tint(subscription.isPaidForCurrentMonth ? .orange : .green)
                     }
-                    .buttonStyle(PlainButtonStyle())
+                }
+                .onDelete { indexSet in
+                    for index in indexSet {
+                        let subscription = subscriptions[index]
+                        subscriptionManager.deleteSubscription(subscription)
+                    }
                 }
             }
+            .listStyle(PlainListStyle())
+            .frame(height: CGFloat(subscriptions.count * 80))
+            .scrollDisabled(true)
         }
         .padding(20)
         .background(theme.cardBackgroundColor)
@@ -62,3 +84,26 @@ struct SubscriptionSection: View {
         .padding(.horizontal, 20)
     }
 }
+
+// MARK: - Interactive Subscription Section Row
+struct InteractiveSubscriptionSectionRow: View {
+    let subscription: Subscription
+    let subscriptionManager: SubscriptionManager
+    
+    @State private var showingDetail = false
+    
+    var body: some View {
+        AnimatedSubscriptionRow(subscription: subscription)
+            .contentShape(Rectangle())
+            .onTapGesture {
+                showingDetail = true
+            }
+            .navigationDestination(isPresented: $showingDetail) {
+                SubscriptionDetailView(
+                    subscription: subscription,
+                    subscriptionManager: subscriptionManager
+                )
+            }
+    }
+}
+
