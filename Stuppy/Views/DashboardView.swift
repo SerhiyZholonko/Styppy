@@ -5,6 +5,11 @@ struct DashboardView: View {
     @EnvironmentObject var theme: ThemeManager
     @StateObject private var viewModel: DashboardViewModel
     
+    @State private var showingMonthlyDetail = false
+    @State private var showingYearlyDetail = false
+    @State private var showingActiveDetail = false
+    @State private var showingDueSoonDetail = false
+    
     init(subscriptionManager: SubscriptionManager) {
         self.subscriptionManager = subscriptionManager
         self._viewModel = StateObject(wrappedValue: DashboardViewModel(subscriptionManager: subscriptionManager))
@@ -27,7 +32,11 @@ struct DashboardView: View {
                         monthlyTotal: viewModel.totalMonthlySpending,
                         yearlyTotal: viewModel.totalYearlySpending,
                         activeSubscriptionsCount: viewModel.activeSubscriptionsCount,
-                        dueSoonCount: viewModel.upcomingSubscriptionsCount
+                        dueSoonCount: viewModel.upcomingSubscriptionsCount,
+                        onMonthlyTotalTap: { showingMonthlyDetail = true },
+                        onYearlyTotalTap: { showingYearlyDetail = true },
+                        onActiveSubscriptionsTap: { showingActiveDetail = true },
+                        onDueSoonTap: { showingDueSoonDetail = true }
                     )
 
                     // Overdue Subscriptions
@@ -145,6 +154,22 @@ struct DashboardView: View {
                 subscriptionManager: subscriptionManager,
                 isPresented: $viewModel.showingCalendar
             )
+        }
+        .sheet(isPresented: $showingMonthlyDetail) {
+            MonthlyPaymentDetailView(subscriptionManager: subscriptionManager)
+                .environmentObject(theme)
+        }
+        .sheet(isPresented: $showingYearlyDetail) {
+            YearlyTotalDetailView(subscriptionManager: subscriptionManager)
+                .environmentObject(theme)
+        }
+        .sheet(isPresented: $showingActiveDetail) {
+            ActiveSubscriptionsDetailView(subscriptionManager: subscriptionManager)
+                .environmentObject(theme)
+        }
+        .sheet(isPresented: $showingDueSoonDetail) {
+            DueSoonDetailView(subscriptionManager: subscriptionManager)
+                .environmentObject(theme)
         }
     }
 
