@@ -192,12 +192,12 @@ struct NotificationCalendarView: View {
         .background(theme.backgroundColor)
         .cornerRadius(20, corners: [.topLeft, .topRight])
         .shadow(color: theme.shadowColor, radius: 20, x: 0, y: -5)
-        }
         .navigationDestination(for: Subscription.self) { subscription in
             SubscriptionDetailView(
                 subscription: subscription,
                 subscriptionManager: subscriptionManager
             )
+        }
         }
     }
 

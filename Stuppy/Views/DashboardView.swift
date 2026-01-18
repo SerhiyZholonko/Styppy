@@ -19,7 +19,7 @@ struct DashboardView: View {
         NavigationStack {
             ScrollView {
                 LazyVStack(spacing: 24) {
-                    // Welcome Header
+                    // Welcome Header (відновлено оригінальний)
                     WelcomeHeader(
                         notificationCount: viewModel.upcomingNotificationsCount,
                         onNotificationTap: {
@@ -27,7 +27,7 @@ struct DashboardView: View {
                         }
                     )
 
-                    // Summary Cards
+                    // Summary Cards (відновлено оригінальний)
                     SummaryCardsSection(
                         monthlyTotal: viewModel.totalMonthlySpending,
                         yearlyTotal: viewModel.totalYearlySpending,
@@ -39,7 +39,7 @@ struct DashboardView: View {
                         onDueSoonTap: { showingDueSoonDetail = true }
                     )
 
-                    // Overdue Subscriptions
+                    // Overdue Subscriptions (оригінальний дизайн з оптимізованою навігацією)
                     if viewModel.hasOverdueSubscriptions {
                         SubscriptionSection(
                             title: "Overdue Subscriptions",
@@ -52,7 +52,7 @@ struct DashboardView: View {
                         )
                     }
 
-                    // Upcoming Renewals
+                    // Upcoming Renewals (оригінальний дизайн з оптимізованою навігацією)
                     if viewModel.hasUpcomingSubscriptions {
                         SubscriptionSection(
                             title: "Upcoming Renewals",
@@ -65,7 +65,7 @@ struct DashboardView: View {
                         )
                     }
 
-                    // Recent Subscriptions
+                    // Recent Subscriptions (оригінальний дизайн з оптимізованою навігацією)
                     if viewModel.hasActiveSubscriptions {
                         VStack(alignment: .leading, spacing: 16) {
                             HStack {
@@ -88,10 +88,10 @@ struct DashboardView: View {
 
                             List {
                                 ForEach(viewModel.recentActiveSubscriptions) { subscription in
-                                    InteractiveDashboardSubscriptionRow(
-                                        subscription: subscription,
-                                        subscriptionManager: subscriptionManager
-                                    )
+                                    NavigationLink(destination: SubscriptionDetailView(subscription: subscription, subscriptionManager: subscriptionManager)) {
+                                        DashboardSubscriptionRowContent(subscription: subscription)
+                                    }
+                                    .buttonStyle(PlainButtonStyle())
                                     .listRowInsets(EdgeInsets())
                                     .listRowBackground(Color.clear)
                                     .swipeActions(edge: .trailing, allowsFullSwipe: false) {
@@ -127,7 +127,7 @@ struct DashboardView: View {
                         .padding(.horizontal, 20)
                     }
 
-                    // Empty state
+                    // Empty state (оригінальний дизайн)
                     if !viewModel.hasActiveSubscriptions {
                         AnimatedEmptyState(
                             title: "No Subscriptions Yet",
@@ -171,36 +171,94 @@ struct DashboardView: View {
             DueSoonDetailView(subscriptionManager: subscriptionManager)
                 .environmentObject(theme)
         }
+        .onAppear {
+            // Reset sheet states when view appears from tab change
+            showingMonthlyDetail = false
+            showingYearlyDetail = false  
+            showingActiveDetail = false
+            showingDueSoonDetail = false
+            viewModel.showingCalendar = false
+        }
     }
-
 }
 
-
-
-// MARK: - Interactive Dashboard Subscription Row
-struct InteractiveDashboardSubscriptionRow: View {
+// MARK: - Dashboard Subscription Row Content
+struct DashboardSubscriptionRowContent: View {
     let subscription: Subscription
-    let subscriptionManager: SubscriptionManager
-    
-    @State private var showingDetail = false
     
     var body: some View {
-        AnimatedSubscriptionRow(subscription: subscription)
-            .contentShape(Rectangle())
-            .onTapGesture {
-                showingDetail = true
+        HStack(spacing: 12) {
+            // Category Icon
+            Image(systemName: subscription.category.icon)
+                .font(.title2)
+                .foregroundColor(subscription.category.color)
+                .frame(width: 32, height: 32)
+                .background(subscription.category.color.opacity(0.1))
+                .cornerRadius(8)
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(subscription.name)
+                    .font(.headline)
+                    .fontWeight(.medium)
+                    .foregroundColor(.primary)
+
+                HStack {
+                    Text(subscription.billingCycle.rawValue)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+
+                    Circle()
+                        .fill(Color.secondary)
+                        .frame(width: 3, height: 3)
+
+                    Text(subscription.category.rawValue)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
             }
-            .navigationDestination(isPresented: $showingDetail) {
-                SubscriptionDetailView(
-                    subscription: subscription,
-                    subscriptionManager: subscriptionManager
-                )
+
+            Spacer()
+
+            VStack(alignment: .trailing, spacing: 4) {
+                Text(String(format: "$%.2f", subscription.price))
+                    .font(.headline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.primary)
+
+                HStack(spacing: 8) {
+                    // Payment status indicator
+                    if subscription.isPaidForCurrentMonth {
+                        Text("Paid")
+                            .font(.caption)
+                            .foregroundColor(.green)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Color.green.opacity(0.1))
+                            .cornerRadius(4)
+                    } else if subscription.isOverdue {
+                        Text("Overdue")
+                            .font(.caption)
+                            .foregroundColor(.red)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Color.red.opacity(0.1))
+                            .cornerRadius(4)
+                    } else if subscription.daysUntilRenewal <= 3 {
+                        Text("\(subscription.daysUntilRenewal) days")
+                            .font(.caption)
+                            .foregroundColor(.orange)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Color.orange.opacity(0.1))
+                            .cornerRadius(4)
+                    } else {
+                        Text("\(subscription.daysUntilRenewal) days")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
             }
+        }
+        .padding(.vertical, 4)
     }
-}
-
-
-#Preview {
-    DashboardView(subscriptionManager: SubscriptionManager())
-        .environmentObject(ThemeManager())
 }

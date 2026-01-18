@@ -5,8 +5,8 @@ class SubscriptionDetailViewModel: ObservableObject {
     @Published var showingEditSheet = false
     @Published var showingDeleteAlert = false
     @Published var showingCalendarView = false
+    @Published var subscription: Subscription
     
-    private var subscription: Subscription
     private var subscriptionManager: SubscriptionManager
     
     init(subscription: Subscription, subscriptionManager: SubscriptionManager) {

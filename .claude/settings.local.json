@@ -2,7 +2,20 @@
   "permissions": {
     "allow": [
       "Bash(find:*)",
-      "Bash(xcodebuild:*)"
+      "Bash(xcodebuild:*)",
+      "Bash(grep:*)",
+      "Bash(rm:*)",
+      "Bash(plutil:*)",
+      "Bash(xcrun simctl openurl:*)",
+      "Bash(xcrun simctl boot:*)",
+      "Bash(xcrun simctl install:*)",
+      "Bash(xcrun simctl launch:*)",
+      "Bash(xcrun simctl spawn:*)",
+      "Bash(mv:*)",
+      "Bash(/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -parse /Users/apple/Documents/gitHub/Styppy/Stuppy/Services/Router.swift)",
+      "Bash(/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -parse /Users/apple/Documents/gitHub/Styppy/Stuppy/Views/RouterContentView.swift)",
+      "Bash(/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -parse /Users/apple/Documents/gitHub/Styppy/Stuppy/Views/SubscriptionListView.swift)",
+      "Bash(swiftc:*)"
     ],
     "deny": []
   }

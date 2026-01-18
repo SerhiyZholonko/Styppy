@@ -11,6 +11,7 @@ class AddEditSubscriptionViewModel: ObservableObject {
     @Published var notes = ""
     @Published var isActive = true
     @Published var selectedColor = "blue"
+    @Published var reminderTime = Date()
     @Published var showingDatePicker = false
     @Published var showingError = false
     @Published var errorMessage = ""
@@ -41,6 +42,11 @@ class AddEditSubscriptionViewModel: ObservableObject {
         self.subscriptionManager = subscriptionManager
         self.editingSubscription = subscription
         
+        // Встановлюємо стандартний час нагадування на 9:00 ранку
+        let calendar = Calendar.current
+        let defaultReminderTime = calendar.date(bySettingHour: 9, minute: 0, second: 0, of: Date()) ?? Date()
+        self.reminderTime = defaultReminderTime
+        
         if let subscription = subscription {
             loadSubscriptionData(subscription)
         }
@@ -56,6 +62,7 @@ class AddEditSubscriptionViewModel: ObservableObject {
         notes = subscription.notes
         isActive = subscription.isActive
         selectedColor = subscription.color
+        reminderTime = subscription.reminderTime
     }
     
     func saveSubscription() {
@@ -81,6 +88,7 @@ class AddEditSubscriptionViewModel: ObservableObject {
             existingSubscription.notes = notes
             existingSubscription.isActive = isActive
             existingSubscription.color = selectedColor
+            existingSubscription.reminderTime = reminderTime
             
             subscriptionManager.updateSubscription(existingSubscription)
         } else {
@@ -93,7 +101,8 @@ class AddEditSubscriptionViewModel: ObservableObject {
                 isActive: isActive,
                 notes: notes,
                 color: selectedColor,
-                repetitionType: selectedRepetitionType
+                repetitionType: selectedRepetitionType,
+                reminderTime: reminderTime
             )
             
             subscriptionManager.addSubscription(newSubscription)
@@ -110,6 +119,12 @@ class AddEditSubscriptionViewModel: ObservableObject {
         notes = ""
         isActive = true
         selectedColor = "blue"
+        
+        // Скидаємо час нагадування на стандартний
+        let calendar = Calendar.current
+        let defaultReminderTime = calendar.date(bySettingHour: 9, minute: 0, second: 0, of: Date()) ?? Date()
+        reminderTime = defaultReminderTime
+        
         showingError = false
         errorMessage = ""
     }

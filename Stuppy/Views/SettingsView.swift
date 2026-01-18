@@ -5,6 +5,7 @@ struct SettingsView: View {
     @AppStorage("notificationDays") private var notificationDays = 1
     @AppStorage("currencySymbol") private var currencySymbol = "$"
     @EnvironmentObject var theme: ThemeManager
+    @EnvironmentObject var subscriptionManager: SubscriptionManager
     @StateObject private var viewModel = SettingsViewModel()
 
     var body: some View {
@@ -231,6 +232,7 @@ struct SettingsView: View {
             }
         }
     }
+
 
     private var bottomPadding: some View {
         Rectangle()

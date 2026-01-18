@@ -1,12 +1,16 @@
 import SwiftUI
+import UIKit
 
 struct SubscriptionListView: View {
     @ObservedObject var subscriptionManager: SubscriptionManager
     @StateObject private var viewModel: SubscriptionListViewModel
+    @StateObject private var navigationManager = NavigationManager.shared
+    @Binding var navigationPath: NavigationPath
     
-    init(subscriptionManager: SubscriptionManager) {
+    init(subscriptionManager: SubscriptionManager, navigationPath: Binding<NavigationPath>) {
         self.subscriptionManager = subscriptionManager
         self._viewModel = StateObject(wrappedValue: SubscriptionListViewModel(subscriptionManager: subscriptionManager))
+        self._navigationPath = navigationPath
     }
 
     var body: some View {
@@ -16,8 +20,7 @@ struct SubscriptionListView: View {
             let isLandscape = screenWidth > geometry.size.height
             let _ = isIPad && isLandscape ? 2 : 1  // Used for layout logic in view
             
-            NavigationStack {
-                VStack(spacing: 0) {
+            VStack(spacing: 0) {
                     // Header with Title and Search
                     VStack(spacing: isIPad ? 20 : 16) {
                         // Custom Header
@@ -145,7 +148,7 @@ struct SubscriptionListView: View {
                                         ForEach(Array(chunked.enumerated()), id: \.offset) { index, chunk in
                                             HStack(spacing: 24) {
                                                 ForEach(chunk) { subscription in
-                                                    NavigationLink(value: subscription) {
+                                                    NavigationLink(destination: SubscriptionDetailView(subscription: subscription, subscriptionManager: subscriptionManager)) {
                                                         SubscriptionCard(subscription: subscription, isIPad: true)
                                                     }
                                                     .buttonStyle(PlainButtonStyle())
@@ -160,7 +163,7 @@ struct SubscriptionListView: View {
                                     } else {
                                         // Portrait - 1 column with enhanced cards
                                         ForEach(viewModel.filteredSubscriptions) { subscription in
-                                            NavigationLink(value: subscription) {
+                                            NavigationLink(destination: SubscriptionDetailView(subscription: subscription, subscriptionManager: subscriptionManager)) {
                                                 SubscriptionCard(subscription: subscription, isIPad: true)
                                             }
                                             .buttonStyle(PlainButtonStyle())
@@ -175,10 +178,13 @@ struct SubscriptionListView: View {
                             // iPhone - Standard List
                             List {
                                 ForEach(viewModel.filteredSubscriptions) { subscription in
-                                    InteractiveSubscriptionRow(
-                                        subscription: subscription,
-                                        subscriptionManager: subscriptionManager
-                                    )
+                                    NavigationLink(destination: SubscriptionDetailView(subscription: subscription, subscriptionManager: subscriptionManager)) {
+                                        InteractiveSubscriptionRowContent(
+                                            subscription: subscription,
+                                            subscriptionManager: subscriptionManager
+                                        )
+                                    }
+                                    .buttonStyle(PlainButtonStyle())
                                     .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                                         Button {
                                             subscriptionManager.deleteSubscription(subscription)
@@ -203,120 +209,118 @@ struct SubscriptionListView: View {
                     }
                 }
                 .navigationBarHidden(true)
+                .toolbar {
+                    ToolbarItemGroup(placement: .keyboard) {
+                        Spacer()
+                        Button("Done") {
+                            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                        }
+                    }
+                }
+                .navigationDestination(for: Subscription.self) { subscription in
+                    SubscriptionDetailView(subscription: subscription, subscriptionManager: subscriptionManager)
+                }
                 .fullScreenCover(isPresented: $viewModel.showingAddSubscription) {
                     AddEditSubscriptionView(subscriptionManager: subscriptionManager)
                 }
             }
-            .navigationDestination(for: Subscription.self) { subscription in
-                SubscriptionDetailView(
-                    subscription: subscription,
-                    subscriptionManager: subscriptionManager
-                )
+            .onAppear {
+                // Reset any modal states when view appears
+                viewModel.showingAddSubscription = false
             }
         }
     }
 
-}
 
 
-
-// MARK: - Interactive Subscription Row
-struct InteractiveSubscriptionRow: View {
+// MARK: - Interactive Subscription Row Content
+struct InteractiveSubscriptionRowContent: View {
     let subscription: Subscription
     let subscriptionManager: SubscriptionManager
     
-    @State private var showingDetail = false
-    
     var body: some View {
-        HStack {
-            // Main content that triggers navigation or long press menu
-            HStack(spacing: 12) {
-                // Category Icon
-                Image(systemName: subscription.category.icon)
-                    .font(.title2)
-                    .foregroundColor(subscription.category.color)
-                    .frame(width: 32, height: 32)
-                    .background(subscription.category.color.opacity(0.1))
-                    .cornerRadius(8)
+            HStack {
+                // Main content
+                HStack(spacing: 12) {
+                    // Category Icon
+                    Image(systemName: subscription.category.icon)
+                        .font(.title2)
+                        .foregroundColor(subscription.category.color)
+                        .frame(width: 32, height: 32)
+                        .background(subscription.category.color.opacity(0.1))
+                        .cornerRadius(8)
 
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(subscription.name)
-                        .font(.headline)
-                        .fontWeight(.medium)
-                        .foregroundColor(.primary)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(subscription.name)
+                            .font(.headline)
+                            .fontWeight(.medium)
+                            .foregroundColor(.primary)
 
-                    HStack {
-                        Text(subscription.billingCycle.rawValue)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-
-                        Circle()
-                            .fill(Color.secondary)
-                            .frame(width: 3, height: 3)
-
-                        Text(subscription.category.rawValue)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                }
-
-                Spacer()
-
-                VStack(alignment: .trailing, spacing: 4) {
-                    Text(String(format: "$%.2f", subscription.price))
-                        .font(.headline)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.primary)
-
-                    HStack(spacing: 8) {
-                        // Payment status indicator
-                        if subscription.isPaidForCurrentMonth {
-                            Text("Paid")
+                        HStack {
+                            Text(subscription.billingCycle.rawValue)
                                 .font(.caption)
-                                .foregroundColor(.green)
-                                .padding(.horizontal, 6)
-                                .padding(.vertical, 2)
-                                .background(Color.green.opacity(0.1))
-                                .cornerRadius(4)
-                        } else if subscription.isOverdue {
-                            Text("Overdue")
-                                .font(.caption)
-                                .foregroundColor(.red)
-                                .padding(.horizontal, 6)
-                                .padding(.vertical, 2)
-                                .background(Color.red.opacity(0.1))
-                                .cornerRadius(4)
-                        } else if subscription.daysUntilNextBilling <= 3 {
-                            Text("\(subscription.daysUntilNextBilling) days")
-                                .font(.caption)
-                                .foregroundColor(.orange)
-                                .padding(.horizontal, 6)
-                                .padding(.vertical, 2)
-                                .background(Color.orange.opacity(0.1))
-                                .cornerRadius(4)
-                        } else {
-                            Text("\(subscription.daysUntilNextBilling) days")
+                                .foregroundColor(.secondary)
+
+                            Circle()
+                                .fill(Color.secondary)
+                                .frame(width: 3, height: 3)
+
+                            Text(subscription.category.rawValue)
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
                     }
+
+                    Spacer()
+
+                    VStack(alignment: .trailing, spacing: 4) {
+                        Text(String(format: "$%.2f", subscription.price))
+                            .font(.headline)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.primary)
+
+                        HStack(spacing: 8) {
+                            // Payment status indicator
+                            if subscription.isPaidForCurrentMonth {
+                                Text("Paid")
+                                    .font(.caption)
+                                    .foregroundColor(.green)
+                                    .padding(.horizontal, 6)
+                                    .padding(.vertical, 2)
+                                    .background(Color.green.opacity(0.1))
+                                    .cornerRadius(4)
+                            } else if subscription.isOverdue {
+                                Text("Overdue")
+                                    .font(.caption)
+                                    .foregroundColor(.red)
+                                    .padding(.horizontal, 6)
+                                    .padding(.vertical, 2)
+                                    .background(Color.red.opacity(0.1))
+                                    .cornerRadius(4)
+                            } else if subscription.daysUntilRenewal <= 3 {
+                                Text("\(subscription.daysUntilRenewal) days")
+                                    .font(.caption)
+                                    .foregroundColor(.orange)
+                                    .padding(.horizontal, 6)
+                                    .padding(.vertical, 2)
+                                    .background(Color.orange.opacity(0.1))
+                                    .cornerRadius(4)
+                            } else {
+                                Text("\(subscription.daysUntilRenewal) days")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                    }
                 }
             }
-            .contentShape(Rectangle()) // Make entire area tappable
-            .onTapGesture {
-                showingDetail = true
-            }
-        }
-        .padding(.vertical, 4)
-        .navigationDestination(isPresented: $showingDetail) {
-            SubscriptionDetailView(
-                subscription: subscription,
-                subscriptionManager: subscriptionManager
-            )
+            .padding(.vertical, 4)
         }
     }
-}
 
 #Preview {
-    SubscriptionListView(subscriptionManager: SubscriptionManager())
+    @Previewable @State var path = NavigationPath()
+    return NavigationStack(path: $path) {
+        SubscriptionListView(subscriptionManager: SubscriptionManager(), navigationPath: $path)
+    }
 }

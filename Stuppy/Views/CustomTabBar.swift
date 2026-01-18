@@ -201,13 +201,7 @@ struct CenterAddButton: View {
                 }
             }, perform: {})
 
-//            Text("Add")
-//                .font(.system(size: 9, weight: .medium))
-//                .foregroundColor(Color.primaryPurple)
-//                .lineLimit(1)
-//                .minimumScaleFactor(0.7)
-//                .scaleEffect(isPressed ? 0.9 : 1.0)
-//                .animation(.spring(response: 0.2, dampingFraction: 0.8), value: isPressed)
+
         }
         .frame(maxWidth: .infinity)
     }
@@ -324,14 +318,7 @@ struct FloatingActionButton: View {
     }
 }
 
-//#Preview {
-//    VStack {
-//        Spacer()
-//        CustomTabBar(selectedTab: .constant(0))
-//            .environmentObject(ThemeManager())
-//    }
-//    .background(Color.lightGray)
-//}
+
 #Preview {
     ContentView()
         .environmentObject(ThemeManager())

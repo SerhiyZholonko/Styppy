@@ -86,8 +86,9 @@ struct Subscription: Identifiable, Codable, Hashable {
     var color: String
     var repetitionType: RepetitionType
     var isPaidForCurrentMonth: Bool
+    var reminderTime: Date // Час для нагадувань про оплату
 
-    init(id: UUID = UUID(), name: String = "", price: Double = 0.0, billingCycle: BillingCycle = .monthly, category: SubscriptionCategory = .other, nextBillingDate: Date = Date(), isActive: Bool = true, notes: String = "", color: String = "blue", repetitionType: RepetitionType = .monthly, isPaidForCurrentMonth: Bool = false) {
+    init(id: UUID = UUID(), name: String = "", price: Double = 0.0, billingCycle: BillingCycle = .monthly, category: SubscriptionCategory = .other, nextBillingDate: Date = Date(), isActive: Bool = true, notes: String = "", color: String = "blue", repetitionType: RepetitionType = .monthly, isPaidForCurrentMonth: Bool = false, reminderTime: Date? = nil) {
         self.id = id
         self.name = name
         self.price = price
@@ -99,6 +100,15 @@ struct Subscription: Identifiable, Codable, Hashable {
         self.color = color
         self.repetitionType = repetitionType
         self.isPaidForCurrentMonth = isPaidForCurrentMonth
+        
+        // Якщо час не вказано, використовуємо 9:00 ранку як стандартний час для нагадувань
+        if let reminderTime = reminderTime {
+            self.reminderTime = reminderTime
+        } else {
+            let calendar = Calendar.current
+            let defaultTime = calendar.date(bySettingHour: 9, minute: 0, second: 0, of: Date()) ?? Date()
+            self.reminderTime = defaultTime
+        }
     }
 
     var monthlyPrice: Double {
@@ -172,8 +182,88 @@ struct Subscription: Identifiable, Codable, Hashable {
 
     var daysUntilNextBilling: Int {
         let calendar = Calendar.current
-        let days = calendar.dateComponents([.day], from: Date(), to: nextBillingDate).day ?? 0
+        let today = calendar.startOfDay(for: Date())
+        let billingDay = calendar.startOfDay(for: nextBillingDate)
+        let days = calendar.dateComponents([.day], from: today, to: billingDay).day ?? 0
+        
+        
         return max(0, days)
+    }
+    
+    // Days until renewal - shows current due date if unpaid, next billing date if paid
+    var daysUntilRenewal: Int {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        
+        if isPaidForCurrentMonth {
+            // If paid, show days until next billing date
+            let billingDay = calendar.startOfDay(for: nextBillingDate)
+            let days = calendar.dateComponents([.day], from: today, to: billingDay).day ?? 0
+            return max(0, days)
+        } else {
+            // If not paid, calculate days until current period's due date
+            let currentDueDate = calculateCurrentPeriodDueDate()
+            let dueDay = calendar.startOfDay(for: currentDueDate)
+            let days = calendar.dateComponents([.day], from: today, to: dueDay).day ?? 0
+            return max(0, days)
+        }
+    }
+    
+    // Calculate the due date for the current billing period
+    private func calculateCurrentPeriodDueDate() -> Date {
+        let calendar = Calendar.current
+        let today = Date()
+        
+        // If nextBillingDate is in the future and not too far, it might be the current due date
+        if nextBillingDate >= today {
+            let daysDiff = calendar.dateComponents([.day], from: today, to: nextBillingDate).day ?? 0
+            
+            // If nextBillingDate is within current billing cycle, use it
+            if daysDiff <= billingCycle.days {
+                return nextBillingDate
+            }
+        }
+        
+        // Otherwise, calculate based on billing cycle
+        switch billingCycle {
+        case .weekly:
+            // Find next week's same day
+            let weekday = calendar.component(.weekday, from: nextBillingDate)
+            let currentWeekday = calendar.component(.weekday, from: today)
+            let daysToAdd = (weekday - currentWeekday + 7) % 7
+            return calendar.date(byAdding: .day, value: daysToAdd == 0 ? 7 : daysToAdd, to: today) ?? today
+            
+        case .monthly:
+            // Find this month's due date
+            let dayOfMonth = calendar.component(.day, from: nextBillingDate)
+            let currentMonth = calendar.component(.month, from: today)
+            let currentYear = calendar.component(.year, from: today)
+            
+            if let dueThisMonth = calendar.date(from: DateComponents(year: currentYear, month: currentMonth, day: dayOfMonth)),
+               dueThisMonth >= today {
+                return dueThisMonth
+            } else {
+                // If due date this month has passed, get next month's date
+                return calendar.date(byAdding: .month, value: 1, to: calendar.date(from: DateComponents(year: currentYear, month: currentMonth, day: dayOfMonth)) ?? today) ?? today
+            }
+            
+        case .quarterly:
+            // Find next quarter's due date
+            return calendar.date(byAdding: .month, value: 3, to: today) ?? today
+            
+        case .yearly:
+            // Find this year's due date or next year's
+            let dayOfMonth = calendar.component(.day, from: nextBillingDate)
+            let monthOfYear = calendar.component(.month, from: nextBillingDate)
+            let currentYear = calendar.component(.year, from: today)
+            
+            if let dueThisYear = calendar.date(from: DateComponents(year: currentYear, month: monthOfYear, day: dayOfMonth)),
+               dueThisYear >= today {
+                return dueThisYear
+            } else {
+                return calendar.date(from: DateComponents(year: currentYear + 1, month: monthOfYear, day: dayOfMonth)) ?? today
+            }
+        }
     }
 
     var isOverdue: Bool {

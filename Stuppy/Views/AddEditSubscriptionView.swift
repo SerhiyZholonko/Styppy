@@ -52,6 +52,29 @@ struct AddEditSubscriptionView: View {
 
                 Section("Billing Information") {
                     DatePicker("Next billing date", selection: $viewModel.nextBillingDate, displayedComponents: .date)
+                    
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Image(systemName: "bell")
+                                .foregroundColor(.blue)
+                                .font(.title3)
+                            Text("Reminder time")
+                                .font(.headline)
+                        }
+                        
+                        DatePicker("Час нагадування", selection: $viewModel.reminderTime, displayedComponents: .hourAndMinute)
+                            .datePickerStyle(.compact)
+                        
+                        HStack {
+                            Image(systemName: "info.circle")
+                                .foregroundColor(.blue)
+                                .font(.caption)
+                            Text("Notifications will be sent at this time one day before the billing date")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    .padding(.vertical, 4)
 
                     Toggle("Active subscription", isOn: $viewModel.isActive)
                 }
@@ -183,6 +206,13 @@ struct AddEditSubscriptionView: View {
                         dismiss()
                     }
                     .disabled(!viewModel.canSave)
+                }
+
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button("Done") {
+                        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                    }
                 }
             }
         }
